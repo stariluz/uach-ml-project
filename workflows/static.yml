@@ -25,28 +25,10 @@ concurrency:
 jobs:
   # Single deploy job since we're just deploying
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # - name: Set up Node
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 20
-      #     cache: 'npm'
-      # - name: Install dependencies
-      #   run: npm install
-      # - name: Save environment variables
-      #   run:
-      #     echo "VITE_REPO_NAME=${{ github.event.repository.name }}" >> environment/.env.production
-      # - name: Test environment variables
-      #   run:
-      #     cat environment/.env.production
-      # - name: Build
-      #   run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
