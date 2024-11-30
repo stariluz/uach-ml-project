@@ -1,105 +1,80 @@
-const ESP32_URL = "http://192.168.100.47"; // Cambia esto por la IP de tu ESP32
+document.addEventListener("DOMContentLoaded", async () => {
+    let model;
 
-// Función para manejar el encendido y apagado de focos
-function handleSwitch(event) {
-    console.log(event);
-    const focoId = event.target.closest('button').getAttribute("attr-focoId");
-    const action = event.target.id.toLowerCase(); // "encender" o "apagar"
-    
-    console.log(focoId, action);
-    fetch(`${ESP32_URL}/${action}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: `foco=${focoId}`,
-    })
-        .then((response) => {
-            if (!response.ok) {
-                console.error(`Error al intentar ${action} el foco ${focoId}: ${response.statusText}`);
-            }
-        })
-        .catch((error) => {
-            console.error(`Error al enviar la solicitud para el foco ${focoId}:`, error);
-        });
-}
+    // Cargar el modelo TensorFlow.js
+    try {
+        model = await tf.loadGraphModel('./assets/tensorflowjs/model.json');
+        console.log(model)
+        console.log("Modelo cargado con éxito.");
+    } catch (error) {
+        console.error("Error al cargar el modelo:", error);
+    }
 
-// Función para manejar el cambio de luminosidad
-function handleLuminosity(event) {
-    const focoId = event.target.getAttribute("attr-focoId");
-    const luminosity = event.target.value;
-
-    fetch(`${ESP32_URL}/brillo`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: `foco=${focoId}&valor=${luminosity}`,
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Error en la respuesta: ${response.statusText}`);
-            }
-            return response.text();
-        })
-        .then((data) => {
-            console.log("Respuesta del servidor:", data);
-        })
-        .catch((error) => {
-            console.error(`Error al enviar la solicitud de luminosidad para el foco ${focoId}:`, error);
-        });
-}
-
-// Función para obtener y sincronizar el estado de los focos
-function syncState() {
-    fetch(`${ESP32_URL}/estado`, {
-        method: "GET",
-    }).then((response) => {
-        if (!response.ok) {
-            throw new Error(`Error al obtener el estado: ${response.statusText}`);
+    // Calcular edad con los datos ingresados
+    document.getElementById("calculateButton").addEventListener("click", () => {
+        const books = parseFloat(document.getElementById("books").value);
+        const clothing = parseFloat(document.getElementById("clothing").value);
+        const electronics = parseFloat(document.getElementById("electronics").value);
+        const home = parseFloat(document.getElementById("home").value);
+        if (!model || isNaN(books) || isNaN(clothing) || isNaN(electronics) || isNaN(home)) {
+            alert("Por favor, completa todos los campos correctamente y asegúrate de que el modelo esté cargado.");
+            return;
         }
-        return response.json();
-    }).then((data) => {
-        // Actualizar sliders y estado de los botones según el estado de los focos
-        Object.keys(data).forEach((focoKey, index) => {
-            const luminosity = data[focoKey];
-            const id=focoKey;
-            
-            // Actualizar el control de rango
-            const slider = document.querySelector(`#luminosidad[attr-focoId="${id}"]`);
-            
-            if (slider) {
-                slider.value = luminosity;
-            }
 
-            // Actualizar estado de los botones de encendido/apagado (opcional)
-            const switchA = document.querySelector(`.switch-icon[attr-focoId="${id}"]`);
-            if (switchA) {
-                if (luminosity > 0) {
-                    switchA.classList.add("active");
-                } else {
-                    switchA.classList.remove("active");
-                }
-            }
-        });
-    })
-        .catch((error) => {
-            console.error("Error al sincronizar el estado de los focos:", error);
-        });
-}
+        const total = books + clothing + electronics + home;
+        const inputTensor = tf.tensor([[books, clothing, electronics, home, total]]);
+        const prediction = model.predict(inputTensor);
+        const predictedAge = prediction.dataSync()[0].toFixed(2);
 
-// Asignar eventos a los spans dentro de los botones
-document.querySelectorAll("button.switch-icon span").forEach((span) => {
-    span.addEventListener("click", handleSwitch);
+        document.getElementById("predictedAge").textContent = predictedAge;
+        document.getElementById("result").classList.remove("d-none");
+    });
+
+    // Procesar archivo subido
+    document.getElementById("processFileButton").addEventListener("click", async () => {
+        const fileInput = document.getElementById("fileInput").files[0];
+
+        if (!fileInput) {
+            alert("Por favor, selecciona un archivo para procesar.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const data = e.target.result;
+            const workbook = XLSX.read(data, { type: "binary" });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet);
+
+            const results = json.map((row) => {
+                const total = row.Books + row.Clothing + row.Electronics + row.Home;
+                const inputTensor = tf.tensor([[row.Books, row.Clothing, row.Electronics, row.Home, total]]);
+                const prediction = model.predict(inputTensor);
+                return { ...row, PredictedAge: prediction.dataSync()[0].toFixed(2) };
+            });
+
+            const newSheet = XLSX.utils.json_to_sheet(results);
+            const newWorkbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Resultados");
+
+            const output = XLSX.write(newWorkbook, { bookType: "xlsx", type: "binary" });
+            const blob = new Blob([s2ab(output)], { type: "application/octet-stream" });
+            const url = URL.createObjectURL(blob);
+
+            const downloadLink = document.getElementById("downloadFile");
+            downloadLink.href = url;
+            downloadLink.download = "predicciones.xlsx";
+            document.getElementById("downloadLink").classList.remove("d-none");
+        };
+
+        reader.readAsBinaryString(fileInput);
+    });
+
+    function s2ab(s) {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+        return buf;
+    }
 });
-
-// Asignar eventos a los controles de luminosidad
-document.querySelectorAll("input[type='range']").forEach((slider) => {
-    slider.addEventListener("input", handleLuminosity);
-});
-
-// Inicializar estado al cargar la página
-syncState();
-
-// Sincronizar el estado cada 10 segundos
-setInterval(syncState, 2000);

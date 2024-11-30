@@ -4,16 +4,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controlar Focos</title>
+  <title>Edad de consumo objetivo</title>
   <link rel="stylesheet" href="./assets/@tabler/css/tabler.min.css">
   <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 
 <body class="p-3">
-  <h1 class="text-center">Edad de consumo objetivo</h1>
+  <h1 class="text-center mb-4">Edad de consumo objetivo</h1>
   <div class="container">
+    <!-- Formulario para calcular edad -->
+    <form id="ageForm" class="card card-body mb-4">
+      <h2 class="card-title">Calcular edad</h2>
+      <div class="row">
+        <div class="col-12 col-sm-6 col-xxl-3 mb-3">
+          <label for="books" class="form-label">Gasto en Libros (USD)</label>
+          <input type="number" id="books" class="form-control" placeholder="Cantidad en dólares" required>
+        </div>
+        <div class="col-12 col-sm-6 col-xxl-3 mb-3">
+          <label for="clothing" class="form-label">Gasto en Ropa (USD)</label>
+          <input type="number" id="clothing" class="form-control" placeholder="Cantidad en dólares" required>
+        </div>
+        <div class="col-12 col-sm-6 col-xxl-3 mb-3">
+          <label for="electronics" class="form-label">Gasto en Electrónica (USD)</label>
+          <input type="number" id="electronics" class="form-control" placeholder="Cantidad en dólares" required>
+        </div>
+        <div class="col-12 col-sm-6 col-xxl-3 mb-3">
+          <label for="home" class="form-label">Gasto en Hogar (USD)</label>
+          <input type="number" id="home" class="form-control" placeholder="Cantidad en dólares" required>
+        </div>
+      </div>
+      <button type="button" id="calculateButton" class="btn btn-primary">Calcular edad</button>
+    </form>
+
+    <!-- Resultado -->
+    <div id="result" class="alert alert-info d-none" role="alert">
+      La edad estimada es: <span id="predictedAge"></span> años.
+    </div>
+
+    <!-- Subir archivo -->
+    <div class="card card-body">
+      <h2 class="card-title">Subir archivo</h2>
+      <form id="uploadForm">
+        <div class="row">
+          <div class="col-12 col-sm-6 col-xxl-3 mb-3">
+            <label for="fileInput" class="form-label">Sube un archivo CSV o XLSX</label>
+            <input type="file" id="fileInput" class="form-control" accept=".csv, .xlsx" required>
+          </div>
+        </div>
+        <button type="button" id="processFileButton" class="btn btn-success">Procesar archivo</button>
+      </form>
+    </div>
+
+    <!-- Enlace para descargar archivo -->
+    <div id="downloadLink" class="mt-3 d-none">
+      <a href="#" id="downloadFile" class="btn btn-secondary">Descargar archivo con predicciones</a>
+    </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="./assets/js/script.js"></script>
   <script src="./assets/@tabler/js/tabler.min.js"></script>
 </body>

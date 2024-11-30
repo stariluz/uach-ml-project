@@ -3,7 +3,6 @@
     height: unset;
 }
 
-
 .switch-icon.active .switch-icon-a,
 .switch-icon:not(.active) .switch-icon-b {
     /* display: none; */

@@ -12,6 +12,6 @@ app.use(express.static('public'));
 
 
 // Inicia el servidor
-app.listen(port, "192.168.100.11",() => {
-    console.log(`Servidor funcionando en http://${"192.168.100.11"}:${port}`);
+app.listen(port, "localhost",() => {
+    console.log(`Servidor funcionando en http://${"localhost"}:${port}`);
 });
