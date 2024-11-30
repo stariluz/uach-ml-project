@@ -21,8 +21,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        const total = books + clothing + electronics + home;
-        const inputTensor = tf.tensor([[books, clothing, electronics, home, total]]);
+        const input = [books, clothing, electronics, home];
+        const means = [3418.6888089 , 3433.85196839, 3419.99408478, 3452.01354209];
+        const stds = [3443.86478207, 3464.00972353, 3449.94753818, 3459.69315208];
+
+        // Estandariza los datos de entrada
+        const standardizedInput = input.map((value, index) => (value - means[index]) / stds[index]);
+
+        // const total = books + clothing + electronics + home;
+        const inputTensor = tf.tensor([standardizedInput]);
         const prediction = model.predict(inputTensor);
         const predictedAge = prediction.dataSync()[0].toFixed(2);
 
@@ -48,8 +55,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             const json = XLSX.utils.sheet_to_json(sheet);
 
             const results = json.map((row) => {
-                const total = row.Books + row.Clothing + row.Electronics + row.Home;
-                const inputTensor = tf.tensor([[row.Books, row.Clothing, row.Electronics, row.Home, total]]);
+                
+                const input = [row.Books, row.Clothing, row.Electronics, row.Home,];
+                const means = [3418.6888089 , 3433.85196839, 3419.99408478, 3452.01354209];
+                const stds = [3443.86478207, 3464.00972353, 3449.94753818, 3459.69315208];
+
+                // Estandariza los datos de entrada
+                const standardizedInput = input.map((value, index) => (value - means[index]) / stds[index]);
+
+                // const total = row.Books + row.Clothing + row.Electronics + row.Home;
+                const inputTensor = tf.tensor([standardizedInput]);
                 const prediction = model.predict(inputTensor);
                 return { ...row, PredictedAge: prediction.dataSync()[0].toFixed(2) };
             });
