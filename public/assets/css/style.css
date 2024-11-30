@@ -1,0 +1,22 @@
+.switch-icon{
+    width: unset;
+    height: unset;
+}
+
+
+.switch-icon.active .switch-icon-a,
+.switch-icon:not(.active) .switch-icon-b {
+    /* display: none; */
+    z-index: -1;
+}
+
+.switch-icon:not(.active) .switch-icon-a,
+.switch-icon.active .switch-icon-b {
+    display: block;
+    z-index: 1;
+}
+
+#luminosidad{
+    rotate: 180deg;
+    writing-mode: vertical-rl;
+}
